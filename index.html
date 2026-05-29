@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phage One-Step Growth Dashboard</title>
+  <meta name="description" content="Interactive one-step growth and plaque assay model for burst size and latent period experiments." />
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__text">
+      <p class="eyebrow">Phage infection modelling</p>
+      <h1>One-step growth dashboard</h1>
+      <p class="lead">Explore how MOI, adsorption, virucide treatment, host susceptibility, burst size, and burst time shape the PFU signal you would see in a double agar overlay assay.</p>
+    </div>
+    <div class="hero__card">
+      <div class="metric big">
+        <span id="heroPfu">—</span>
+        <label>PFU/mL at selected time</label>
+      </div>
+      <div class="hero__mini">
+        <div><strong id="heroTime">—</strong><span>sample time</span></div>
+        <div><strong id="heroPlaques">—</strong><span>expected plaques</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls" aria-label="Model controls">
+      <div class="panel__header">
+        <h2>Conditions</h2>
+        <button id="resetBtn" class="ghost" type="button">Reset</button>
+      </div>
+
+      <section class="control-section">
+        <div class="section-title">
+          <span>1</span>
+          <h3>Bacteria</h3>
+        </div>
+
+        <label class="control">
+          <span>Culture volume <output id="cultureVolumeOut"></output></span>
+          <input id="cultureVolume" type="range" min="0.1" max="50" value="1" step="0.1" />
+        </label>
+
+        <label class="control">
+          <span>OD600 <output id="odOut"></output></span>
+          <input id="od" type="range" min="0.05" max="1" value="0.25" step="0.01" />
+        </label>
+
+        <label class="control">
+          <span>Cells/mL at OD600 0.25 <output id="cellsAtODOut"></output></span>
+          <input id="cellsAtODLog" type="range" min="5" max="9" value="8" step="0.05" />
+        </label>
+
+        <label class="control select-control">
+          <span>Susceptible bacteria</span>
+          <select id="susceptibility">
+            <option value="0.001">0.1%</option>
+            <option value="0.01">1%</option>
+            <option value="0.10">10%</option>
+            <option value="0.20">20%</option>
+            <option value="0.30">30%</option>
+            <option value="0.50">50%</option>
+            <option value="0.80">80%</option>
+            <option value="1" selected>100%</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="control-section">
+        <div class="section-title">
+          <span>2</span>
+          <h3>Phage dose</h3>
+        </div>
+
+        <label class="control select-control">
+          <span>Dose mode</span>
+          <select id="doseMode">
+            <option value="moi" selected>Set by MOI</option>
+            <option value="pfu">Set by total PFU</option>
+          </select>
+        </label>
+
+        <label class="control" id="moiControl">
+          <span>MOI, total bacteria <output id="moiOut"></output></span>
+          <input id="moiLog" type="range" min="-3" max="2" value="0" step="0.05" />
+        </label>
+
+        <label class="control" id="pfuControl">
+          <span>Total phage added <output id="totalPfuOut"></output></span>
+          <input id="totalPfuLog" type="range" min="3" max="13" value="8" step="0.05" />
+        </label>
+
+        <label class="control">
+          <span>Phage stock titer <output id="stockTiterOut"></output></span>
+          <input id="stockTiterLog" type="range" min="6" max="12" value="10" step="0.05" />
+        </label>
+      </section>
+
+      <section class="control-section">
+        <div class="section-title">
+          <span>3</span>
+          <h3>Adsorption</h3>
+        </div>
+
+        <label class="control">
+          <span>Adsorption time <output id="adsorptionTimeOut"></output></span>
+          <input id="adsorptionTime" type="range" min="0" max="90" value="15" step="1" />
+        </label>
+
+        <label class="control">
+          <span>Adsorption rate constant <output id="adsorptionRateOut"></output></span>
+          <input id="adsorptionRate" type="range" min="0.1" max="10" value="2" step="0.1" />
+        </label>
+
+        <label class="check-row">
+          <input id="virucide" type="checkbox" checked />
+          <span>Virucide applied after adsorption</span>
+        </label>
+
+        <label class="control" id="virucideSurvivalControl">
+          <span>Residual free phage after virucide <output id="virucideSurvivalOut"></output></span>
+          <input id="virucideSurvivalLog" type="range" min="-6" max="-1" value="-3" step="0.1" />
+        </label>
+      </section>
+
+      <section class="control-section">
+        <div class="section-title">
+          <span>4</span>
+          <h3>Phage life history</h3>
+        </div>
+
+        <label class="control">
+          <span>Burst size <output id="burstSizeOut"></output></span>
+          <input id="burstSize" type="range" min="10" max="250" value="200" step="1" />
+        </label>
+
+        <label class="control">
+          <span>Burst time / latent period <output id="burstTimeOut"></output></span>
+          <input id="burstTime" type="range" min="5" max="300" value="180" step="1" />
+        </label>
+
+        <label class="control">
+          <span>Graph duration <output id="graphDurationOut"></output></span>
+          <input id="graphDuration" type="range" min="30" max="600" value="300" step="10" />
+        </label>
+
+        <div class="preset-row">
+          <button class="small" id="presetMcgavigan" type="button">Mcgavigan-like</button>
+          <button class="small" id="presetFast" type="button">Fast lytic example</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <section class="panel graph-panel">
+        <div class="panel__header graph-header">
+          <div>
+            <h2>Predicted PFU signal over time</h2>
+            <p class="subtle">Click or drag across the graph to choose the sample used for the plate preview.</p>
+          </div>
+          <div class="chart-actions">
+            <button id="exportCsvBtn" type="button">Export CSV</button>
+            <button id="copyParamsBtn" type="button">Copy parameters</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="growthChart" width="1200" height="560" role="img" aria-label="Predicted PFU per milliliter over time"></canvas>
+          <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+        </div>
+        <label class="control time-control">
+          <span>Selected sample time <output id="sampleTimeOut"></output></span>
+          <input id="sampleTime" type="range" min="0" max="300" value="180" step="1" />
+        </label>
+      </section>
+
+      <section class="grid two-col">
+        <section class="panel plate-panel">
+          <div class="panel__header">
+            <div>
+              <h2>Double agar plate preview</h2>
+              <p class="subtle">Choose the dilution you would plate from the selected sample.</p>
+            </div>
+          </div>
+          <div class="plate-controls">
+            <label class="control select-control">
+              <span>Sample dilution</span>
+              <select id="dilution"></select>
+            </label>
+            <label class="control">
+              <span>Plated volume <output id="platedVolumeOut"></output></span>
+              <input id="platedVolume" type="range" min="10" max="1000" value="10" step="10" />
+            </label>
+          </div>
+          <div class="plate-wrap">
+            <svg id="plateSvg" viewBox="0 0 520 520" aria-label="Simulated double agar plate"></svg>
+          </div>
+          <div id="plateSummary" class="plate-summary">—</div>
+        </section>
+
+        <section class="panel summary-panel">
+          <div class="panel__header">
+            <h2>Experiment summary</h2>
+          </div>
+          <div class="metrics" id="metrics"></div>
+          <div class="notes">
+            <h3>Model assumptions</h3>
+            <p>This is a deterministic teaching model, not a parameter-fitting tool. Adsorption follows mass-action loss of free phage against the susceptible host fraction. Productive infection follows a Poisson occupancy model, so multiple adsorptions to the same cell do not create additional burst events. Virucide only reduces free, unadsorbed phage. After the adsorption/virucide step, secondary infection is suppressed to mimic a one-step growth experiment.</p>
+            <p>The burst-time dial is treated as the first-release latent period. The rise to plateau is smoothed over a short rise period so the graph looks like experimental data rather than a perfect step function.</p>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Static GitHub Pages dashboard. No server, database, or external JavaScript dependencies are required.</p>
+  </footer>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
